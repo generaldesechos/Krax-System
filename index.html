@@ -3,31 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Solar Synth | X-Y Oscilloscope</title>
+    <title>Solar Synth | Final Stable Fix</title>
     <style>
-        :root { --bg: #020205; --gold: #f0e68c; --gap: 3000px; --crt-green: #33ff33; }
-        body, html { margin: 0; padding: 0; background: var(--bg); color: white; font-family: 'Courier New', monospace; overflow-x: hidden; }
-        .scroll-track { height: 33000px; position: relative; }
-        .sticky-wrapper { position: sticky; top: 0; width: 100%; height: 100vh; overflow: hidden; perspective: 1200px; perspective-origin: 50% 50%; }
-        .star-field { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, #1b2735 0%, #050505 100%); z-index: -1; }
-        #stage { width: 100%; height: 100%; transform-style: preserve-3d; will-change: transform; }
-        .section { position: absolute; top: 0; left: 0; width: 100%; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; transform-style: preserve-3d; transition: opacity 1s ease-out; opacity: 0; pointer-events: none; }
+        :root { --bg: #020205; --gold: #f0e68c; --crt-green: #33ff33; }
+        
+        body, html { 
+            margin: 0; padding: 0; 
+            background: var(--bg); 
+            color: white; 
+            font-family: 'Courier New', monospace; 
+            width: 100%;
+        }
+
+        /* 1. The Scroll Provider */
+        .scroll-container {
+            height: 35000px; /* This creates the physical scrolling space */
+            width: 100%;
+        }
+
+        /* 2. The Fixed Viewport */
+        .viewport {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100vh;
+            perspective: 1000px;
+            perspective-origin: 50% 50%;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .star-field {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #1b2735 0%, #050505 100%);
+            z-index: -1;
+        }
+
+        #stage {
+            width: 100%; height: 100%;
+            transform-style: preserve-3d;
+            will-change: transform;
+        }
+
+        .section {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100vh;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transform-style: preserve-3d;
+            opacity: 0; 
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+
         .planet-container { position: relative; display: flex; justify-content: center; align-items: center; width: 250px; height: 250px; transform-style: preserve-3d; }
         .planet { width: 250px; height: 250px; border-radius: 50%; cursor: pointer; box-shadow: inset -30px -30px 50px #000; z-index: 10; -webkit-tap-highlight-color: transparent;}
         .ring { position: absolute; width: 450px; height: 100px; border-radius: 50%; background: rgba(223, 209, 149, 0.4); border: 2px solid rgba(122, 110, 66, 0.8); transform: rotateX(75deg); z-index: 5; pointer-events: none; }
-        #dashboard { position: absolute; top: 0; left: 0; width: 100%; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.85); z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 1s; }
+
+        .info { text-align: center; margin-bottom: 20px; text-shadow: 0 0 10px #000; }
+
+        /* Dashboard */
+        #dashboard {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.9); z-index: 2000; opacity: 0; pointer-events: none; transition: opacity 0.8s;
+        }
+
         #oscilloscope { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.8; }
-        .controls { margin-bottom: 20px; display: flex; align-items: center; gap: 15px; background: rgba(0,0,0,0.6); padding: 10px; border-radius: 5px; }
-        .toggle-btn { background: #111; border: 1px solid var(--gold); color: var(--gold); padding: 8px 15px; cursor: pointer; font-family: inherit; font-size: 11px; text-transform: uppercase; }
-        .toggle-btn.active { background: var(--gold); color: #000; box-shadow: 0 0 10px var(--gold); }
-        .planet-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 10px; width: 95%; max-width: 900px; justify-items: center; }
-        .mini-card { display: flex; flex-direction: column; align-items: center; text-align: center; font-size: 9px; }
-        .mini-planet-container { position: relative; width: 45px; height: 45px; margin-bottom: 5px; display: flex; justify-content: center; align-items: center; }
-        .mini-planet { width: 45px; height: 45px; border-radius: 50%; cursor: pointer; box-shadow: inset -8px -8px 12px #000; z-index: 10; }
-        .mini-ring { position: absolute; width: 80px; height: 18px; background: rgba(223, 209, 149, 0.3); border: 1px solid rgba(122, 110, 66, 0.5); border-radius: 50%; transform: rotateX(75deg); z-index: 5; }
-        input[type=range] { cursor: pointer; accent-color: var(--crt-green); }
+        .controls { margin-bottom: 10px; display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.6); padding: 8px; border-radius: 5px; }
+        .toggle-btn { background: #111; border: 1px solid var(--gold); color: var(--gold); padding: 6px 12px; cursor: pointer; font-family: inherit; font-size: 10px; }
+        .toggle-btn.active { background: var(--gold); color: #000; }
         
-        /* Textures */
+        .planet-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; width: 95%; max-width: 800px; justify-items: center; }
+        .mini-card { display: flex; flex-direction: column; align-items: center; text-align: center; font-size: 9px; }
+        .mini-planet-container { position: relative; width: 40px; height: 40px; margin-bottom: 5px; display: flex; justify-content: center; align-items: center; }
+        .mini-planet { width: 40px; height: 40px; border-radius: 50%; cursor: pointer; box-shadow: inset -6px -6px 10px #000; z-index: 10; }
+        .mini-ring { position: absolute; width: 70px; height: 15px; background: rgba(223, 209, 149, 0.3); border-radius: 50%; transform: rotateX(75deg); z-index: 5; }
+
+        /* Planet Textures */
         .sun { background: radial-gradient(circle at 30% 30%, #ffcc33, #ff6600); box-shadow: 0 0 50px #ff6600; }
         .mercury { background: radial-gradient(circle at 30% 30%, #b5b5b5, #444); }
         .venus { background: radial-gradient(circle at 30% 30%, #e8c381, #6b4a1a); }
@@ -38,41 +89,38 @@
         .uranus { background: radial-gradient(circle at 30% 30%, #b2e1e5, #4e8a8e); }
         .neptune { background: radial-gradient(circle at 30% 30%, #4b70dd, #1a2a6c); }
         .planetx { background: radial-gradient(circle at 30% 30%, #222, #000); box-shadow: 0 0 20px #444; }
+
+        input[type=range] { cursor: pointer; accent-color: var(--crt-green); }
     </style>
 </head>
 <body>
 
-    <div class="scroll-track">
-        <div class="sticky-wrapper">
-            <div class="star-field"></div>
-            <div id="stage"></div>
+    <div class="scroll-container"></div>
 
-            <div id="dashboard">
-                <canvas id="oscilloscope"></canvas>
-                <h2 style="color: var(--gold); letter-spacing: 5px; margin: 10px 0;">SOLAR SYNTHESIZER</h2>
-                
-                <div style="background: rgba(0,0,0,0.7); padding: 15px; border: 1px solid #333; border-radius: 10px; margin-bottom: 10px; width: 85%; max-width: 350px;">
-                    <label style="color: var(--gold); font-size: 11px; letter-spacing: 2px;">HEARTBEAT & WAVEFORM</label>
-                    <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 12px;">
-                        <button class="toggle-btn" id="hb-toggle">PULSE: OFF</button>
-                        <div style="display: flex; flex-direction: column; gap: 5px;">
-                            <div style="display:flex; justify-content: space-between; font-size: 10px;"><span>TEMPO</span><span id="hb-val">1.0 Hz</span></div>
-                            <input type="range" id="hb-tempo" min="0.5" max="4.0" step="0.1" value="1.0">
-                        </div>
-                        <div style="display: flex; flex-direction: column; gap: 5px;">
-                            <div style="display:flex; justify-content: space-between; font-size: 10px;"><span>WAVEFORM: LINE</span><span>CIRCLE</span></div>
-                            <input type="range" id="wave-morph" min="0" max="1" step="0.01" value="0">
-                        </div>
-                    </div>
-                </div>
+    <div class="viewport">
+        <div class="star-field"></div>
+        <div id="stage"></div>
+    </div>
 
-                <div class="controls">
-                    <button class="toggle-btn active" id="btn-short">SHORT DECAY</button>
-                    <button class="toggle-btn" id="btn-long">LONG DECAY</button>
-                </div>
-                <div class="planet-grid" id="synth-grid"></div>
+    <div id="dashboard">
+        <canvas id="oscilloscope"></canvas>
+        <h3 style="color: var(--gold); letter-spacing: 5px; margin: 5px 0;">SOLAR SYNTHESIZER</h3>
+        
+        <div style="background: rgba(0,0,0,0.7); padding: 10px; border: 1px solid #333; border-radius: 10px; margin-bottom: 10px; width: 90%; max-width: 350px;">
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <button class="toggle-btn" id="hb-toggle">PULSE: OFF</button>
+                <div style="display:flex; justify-content: space-between; font-size: 10px;"><span>TEMPO</span><span id="hb-val">1.0 Hz</span></div>
+                <input type="range" id="hb-tempo" min="0.5" max="4.0" step="0.1" value="1.0">
+                <div style="display:flex; justify-content: space-between; font-size: 10px;"><span>LINE</span><span>CIRCLE</span></div>
+                <input type="range" id="wave-morph" min="0" max="1" step="0.01" value="0">
             </div>
         </div>
+
+        <div class="controls">
+            <button class="toggle-btn active" id="btn-short">SHORT DECAY</button>
+            <button class="toggle-btn" id="btn-long">LONG DECAY</button>
+        </div>
+        <div class="planet-grid" id="synth-grid"></div>
     </div>
 
     <script>
@@ -92,22 +140,25 @@
         const stage = document.getElementById('stage');
         const synthGrid = document.getElementById('synth-grid');
         let toneDuration = 1.0;
-        let morphVal = 0; // 0 = Line, 1 = Circle
+        let morphVal = 0;
+        const zoomStep = 3000;
 
+        // 1. Setup Planet DOM
         planetsData.forEach((p, i) => {
             const isSaturn = p.class === "saturn";
             const sec = document.createElement('div');
             sec.className = 'section';
-            sec.style.transform = `translate3d(0, 0, ${i * -3000}px)`;
+            sec.id = `sec-${i}`;
             sec.innerHTML = `<div class="info"><h1>${p.name}</h1><p>${p.freq} Hz</p></div><div class="planet-container">${isSaturn ? '<div class="ring"></div>' : ''}<div class="planet ${p.class}" data-freq="${p.freq}"></div></div>`;
             stage.appendChild(sec);
+
             const card = document.createElement('div');
             card.className = 'mini-card';
             card.innerHTML = `<div class="mini-planet-container">${isSaturn ? '<div class="mini-ring"></div>' : ''}<div class="mini-planet ${p.class}" data-freq="${p.freq}"></div></div><label>${p.name.split(' ').pop()}</label><span>${p.freq}Hz</span>`;
             synthGrid.appendChild(card);
         });
 
-        // Audio System
+        // 2. Audio Engine
         let aCtx, analyser, dataArray;
         const canvas = document.getElementById('oscilloscope'), ctx = canvas.getContext('2d');
 
@@ -118,37 +169,26 @@
             analyser.fftSize = 1024;
             dataArray = new Uint8Array(analyser.frequencyBinCount);
             analyser.connect(aCtx.destination);
-            draw();
+            drawOsc();
         }
 
-        function draw() {
-            requestAnimationFrame(draw);
+        function drawOsc() {
+            requestAnimationFrame(drawOsc);
             canvas.width = window.innerWidth; canvas.height = window.innerHeight;
             analyser.getByteTimeDomainData(dataArray);
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.lineWidth = 3; ctx.strokeStyle = '#33ff33'; ctx.shadowBlur = 10; ctx.shadowColor = '#33ff33';
             ctx.beginPath();
-
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            const radius = Math.min(centerX, centerY) * 0.7;
-
+            const cx = canvas.width / 2, cy = canvas.height / 2, r = Math.min(cx, cy) * 0.6;
             for (let i = 0; i < dataArray.length; i++) {
-                let v = dataArray[i] / 128.0 - 1.0; // Range -1 to 1
-                
-                // Line coordinates
+                let v = dataArray[i] / 128.0 - 1.0;
                 let lx = (i / dataArray.length) * canvas.width;
-                let ly = centerY + v * (centerY * 0.5);
-
-                // Circle coordinates (Parametric)
-                let angle = (i / dataArray.length) * Math.PI * 2;
-                let cx = centerX + Math.cos(angle) * (radius + v * 50);
-                let cy = centerY + Math.sin(angle) * (radius + v * 50);
-
-                // Morphing between Line and Circle
-                let x = lx * (1 - morphVal) + cx * morphVal;
-                let y = ly * (1 - morphVal) + cy * morphVal;
-
+                let ly = cy + v * (cy * 0.5);
+                let ang = (i / dataArray.length) * Math.PI * 2;
+                let crx = cx + Math.cos(ang) * (r + v * 60);
+                let cry = cy + Math.sin(ang) * (r + v * 60);
+                let x = lx * (1 - morphVal) + crx * morphVal;
+                let y = ly * (1 - morphVal) + cry * morphVal;
                 if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
             }
             if(morphVal > 0.5) ctx.closePath();
@@ -174,21 +214,42 @@
             o.start(); o.stop(aCtx.currentTime + 0.5);
         }
 
-        // Scroll logic
+        // 3. Scroll Controller
         const sections = document.querySelectorAll('.section'), dash = document.getElementById('dashboard');
-        window.addEventListener('scroll', () => {
-            const y = window.scrollY; stage.style.transform = `translate3d(0, 0, ${y}px)`;
-            sections.forEach((s, i) => {
-                const dist = Math.abs(y - (i * 3000));
-                s.style.opacity = dist < 1200 ? "1" : "0";
-                s.style.pointerEvents = dist < 400 ? "auto" : "none";
-            });
-            const max = (planetsData.length - 1) * 3000;
-            dash.style.opacity = y > max + 1200 ? "1" : "0";
-            dash.style.pointerEvents = y > max + 1200 ? "auto" : "none";
-        });
+        
+        window.onscroll = () => {
+            const y = window.pageYOffset || document.documentElement.scrollTop;
+            
+            // Move the stage
+            stage.style.transform = `translate3d(0, 0, ${y}px)`;
 
-        // Controls
+            // Visibility Logic
+            sections.forEach((s, i) => {
+                const home = i * zoomStep;
+                const dist = Math.abs(y - home);
+                
+                // Position each section at its correct Z-depth
+                s.style.transform = `translate3d(0, 0, -${home}px)`;
+                
+                if (dist < 1500) {
+                    s.style.opacity = "1";
+                    s.style.pointerEvents = dist < 500 ? "auto" : "none";
+                } else {
+                    s.style.opacity = "0";
+                    s.style.pointerEvents = "none";
+                }
+            });
+
+            // Dash Trigger
+            const max = (planetsData.length - 1) * zoomStep;
+            if (y > max + 1000) {
+                dash.style.opacity = "1"; dash.style.pointerEvents = "auto";
+            } else {
+                dash.style.opacity = "0"; dash.style.pointerEvents = "none";
+            }
+        };
+
+        // 4. Controls
         let hbEnabled = false, hbInt;
         document.getElementById('hb-toggle').onclick = (e) => {
             hbEnabled = !hbEnabled; e.target.textContent = `PULSE: ${hbEnabled ? 'ON' : 'OFF'}`;
@@ -204,7 +265,9 @@
         document.querySelectorAll('[data-freq]').forEach(p => p.addEventListener('pointerdown', () => play(parseFloat(p.dataset.freq))));
         document.getElementById('btn-short').onclick = function() { toneDuration = 1.0; this.classList.add('active'); document.getElementById('btn-long').classList.remove('active'); };
         document.getElementById('btn-long').onclick = function() { toneDuration = 5.0; this.classList.add('active'); document.getElementById('btn-short').classList.remove('active'); };
-        window.dispatchEvent(new Event('scroll'));
+
+        // Force initial scroll check
+        window.scrollTo(0, 1); window.scrollTo(0, 0);
     </script>
 </body>
 </html>
