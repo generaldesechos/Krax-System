@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar Frequencies | Interstellar Scroll</title>
+    <style>
+        :root {
+            --bg-dark: #020205;
+            --text-gold: #f0e68c;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-dark);
+            color: white;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Fixed Star Background */
+        .star-field {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            z-index: -1;
+            /* Simple CSS Stars */
+            box-shadow: 
+                20vw 10vh #fff, 40vw 30vh #fff, 60vw 15vh #fff, 80vw 50vh #fff, 10vw 80vh #fff,
+                30vw 90vh #fff, 50vw 60vh #fff, 70vw 85vh #fff, 90vw 20vh #fff, 25vw 45vh #fff,
+                15vw 5vh 1px #fff, 55vw 35vh 1px #fff, 85vw 75vh 1px #fff, 35vw 65vh 1px #fff;
+        }
+
+        /* 3D Viewport Container */
+        .container {
+            height: 1000vh; /* Determines total scroll depth */
+            perspective: 800px;
+            perspective-origin: 50% 50%;
+        }
+
+        /* The moving stage that zooms toward the camera */
+        #stage {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            transform-style: preserve-3d;
+            will-change: transform;
+        }
+
+        .section {
+            position: absolute;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transform-style: preserve-3d;
+            backface-visibility: hidden;
+        }
+
+        .info {
+            text-align: center;
+            z-index: 2;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        /* Planet Styles */
+        .planet {
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            margin-top: 20px;
+            box-shadow: inset -30px -30px 50px #000, 0 0 20px rgba(255,255,255,0.1);
+        }
+
+        h1, h2 { 
+            font-size: 4rem; 
+            margin: 0; 
+            letter-spacing: 10px; 
+            color: var(--text-gold);
+            text-shadow: 0 0 20px rgba(240, 230, 140, 0.5);
+        }
+
+        p { font-size: 1.2rem; color: #ccc; }
+
+        /* Specific Planet Appearances */
+        .sun { background: radial-gradient(circle at 30% 30%, #ff5f6d, #ffc371); width: 500px; height: 500px; box-shadow: 0 0 100px #ff5f6d; }
+        .mercury { background: radial-gradient(circle at 30% 30%, #8c8c8c, #333); }
+        .venus { background: radial-gradient(circle at 30% 30%, #e3bb76, #5d4017); }
+        .earth { background: radial-gradient(circle at 30% 30%, #2b65ec, #06163a); }
+        .mars { background: radial-gradient(circle at 30% 30%, #ec4b2b, #4a0e05); }
+
+        .visible { opacity: 1; }
+
+        .scroll-indicator {
+            position: fixed;
+            bottom: 20px;
+            width: 100%;
+            text-align: center;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="star-field"></div>
+    <div class="scroll-indicator">Scroll to Explore</div>
+
+    <div class="container">
+        <div id="stage">
+            
+            <div class="section" style="transform: translateZ(0px)">
+                <div class="info visible">
+                    <h1>THE SUN</h1>
+                    <p>Frequency: 126.4 Hz (Helioseismic)</p>
+                </div>
+                <div class="planet sun"></div>
+            </div>
+
+            <div class="section" style="transform: translateZ(-2000px)">
+                <div class="info">
+                    <h2>MERCURY</h2>
+                    <p>Orbital Frequency: 1.306 × 10⁻⁷ Hz</p>
+                </div>
+                <div class="planet mercury"></div>
+            </div>
+
+            <div class="section" style="transform: translateZ(-4000px)">
+                <div class="info">
+                    <h2>VENUS</h2>
+                    <p>Orbital Frequency: 5.144 × 10⁻⁸ Hz</p>
+                </div>
+                <div class="planet venus"></div>
+            </div>
+
+            <div class="section" style="transform: translateZ(-6000px)">
+                <div class="info">
+                    <h2>EARTH</h2>
+                    <p>Frequency: 7.83 Hz (Schumann Resonance)</p>
+                </div>
+                <div class="planet earth"></div>
+            </div>
+
+            <div class="section" style="transform: translateZ(-8000px)">
+                <div class="info">
+                    <h2>MARS</h2>
+                    <p>Orbital Frequency: 1.68 × 10⁻⁸ Hz</p>
+                </div>
+                <div class="planet mars"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const stage = document.getElementById('stage');
+        const sections = document.querySelectorAll('.section');
+        const infos = document.querySelectorAll('.info');
+
+        window.addEventListener('scroll', () => {
+            const scrollY = window.scrollY;
+            
+            // Move the stage forward as we scroll
+            // The multiplier (1.0) controls the speed of the zoom
+            stage.style.transform = `translateZ(${scrollY}px)`;
+
+            // Logic to show text only when the planet is at a certain "depth"
+            sections.forEach((section, index) => {
+                // Each planet is 2000px apart (matching the translateZ in CSS)
+                const depth = index * 2000;
+                const distance = Math.abs(scrollY - depth);
+                
+                if (distance < 500) {
+                    infos[index].classList.add('visible');
+                } else {
+                    infos[index].classList.remove('visible');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
