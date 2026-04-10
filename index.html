@@ -114,147 +114,178 @@
             <div id="stage"></div>
 
             <div id="dashboard">
-                <h2 style="color: var(--gold); letter-spacing: 5px; margin-bottom: 5px;">SOLAR SYNTHESIZER</h2>
-                <div class="controls">
-                    <span>DURATION:</span>
-                    <button class="toggle-btn active" id="btn-short">SHORT</button>
-                    <button class="toggle-btn" id="btn-long">LONG</button>
-                </div>
-                <div class="planet-grid" id="synth-grid"></div>
+    <h2 style="color: var(--gold); letter-spacing: 5px; margin-bottom: 5px;">SOLAR SYNTHESIZER</h2>
+    
+    <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 20px; width: 90%; max-width: 400px; text-align: center;">
+        <label style="color: var(--gold); font-size: 14px; letter-spacing: 2px;">HEARTBEAT</label>
+        <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 10px;">
+            <button class="toggle-btn" id="hb-toggle">PULSE: OFF</button>
+            <div style="display: flex; align-items: center; gap: 10px; justify-content: center;">
+                <span style="font-size: 10px;">TEMPO:</span>
+                <input type="range" id="hb-tempo" min="0.5" max="4.0" step="0.1" value="1.0" style="flex: 1;">
+                <span id="hb-val" style="font-size: 10px; min-width: 40px;">1.0 Hz</span>
             </div>
         </div>
     </div>
 
-    <script>
-        const planetsData = [
-            { name: "THE SUN", freq: 126.22, class: "sun" },
-            { name: "MERCURY", freq: 141.27, class: "mercury" },
-            { name: "VENUS", freq: 221.23, class: "venus" },
-            { name: "EARTH", freq: 194.18, class: "earth" },
-            { name: "MARS", freq: 144.72, class: "mars" },
-            { name: "JUPITER", freq: 183.58, class: "jupiter" },
-            { name: "SATURN", freq: 147.85, class: "saturn" },
-            { name: "URANUS", freq: 207.36, class: "uranus" },
-            { name: "NEPTUNE", freq: 211.44, class: "neptune" },
-            { name: "PLANET X", freq: 123.45, class: "planetx" }
-        ];
+    <div class="controls">
+        <span>DURATION:</span>
+        <button class="toggle-btn active" id="btn-short">SHORT</button>
+        <button class="toggle-btn" id="btn-long">LONG</button>
+    </div>
+    <div class="planet-grid" id="synth-grid"></div>
+</div>
 
-        const stage = document.getElementById('stage');
-        const synthGrid = document.getElementById('synth-grid');
-        let toneDuration = 1.0;
-        const zoomStep = 3000; // Define gap constant
+<script>
+    const planetsData = [
+        { name: "THE SUN", freq: 126.22, class: "sun" },
+        { name: "MERCURY", freq: 141.27, class: "mercury" },
+        { name: "VENUS", freq: 221.23, class: "venus" },
+        { name: "EARTH", freq: 194.18, class: "earth" },
+        { name: "MARS", freq: 144.72, class: "mars" },
+        { name: "JUPITER", freq: 183.58, class: "jupiter" },
+        { name: "SATURN", freq: 147.85, class: "saturn" },
+        { name: "URANUS", freq: 207.36, class: "uranus" },
+        { name: "NEPTUNE", freq: 211.44, class: "neptune" },
+        { name: "PLANET X", freq: 123.45, class: "planetx" }
+    ];
 
-        // Build 3D Sections and Synth Cards
-        planetsData.forEach((p, i) => {
-            // Check if planet is saturn for ring addition
-            const isSaturn = p.class === "saturn";
-            
-            // Add to 3D Stage
-            const sec = document.createElement('div');
-            sec.className = 'section';
-            sec.style.transform = `translate3d(0, 0, ${i * -zoomStep}px)`;
-            
-            // Planet wrapper for rings
-            let planetHTML = `
-                <div class="planet-container">
-                    ${isSaturn ? '<div class="ring"></div>' : ''}
-                    <div class="planet ${p.class}" data-freq="${p.freq}"></div>
-                </div>`;
-                
-            sec.innerHTML = `<div class="info"><h1>${p.name}</h1><p>${p.freq} Hz</p></div>${planetHTML}`;
-            stage.appendChild(sec);
+    const stage = document.getElementById('stage');
+    const synthGrid = document.getElementById('synth-grid');
+    let toneDuration = 1.0;
+    const zoomStep = 3000;
 
-            // Add to Synth Grid
-            const card = document.createElement('div');
-            card.className = 'mini-card';
-            card.innerHTML = `
-                <div class="mini-planet-container">
-                    ${isSaturn ? '<div class="mini-ring"></div>' : ''}
-                    <div class="mini-planet ${p.class}" data-freq="${p.freq}"></div>
-                </div>
-                <label>${p.name.split(' ').pop()}</label><span>${p.freq}Hz</span>`;
-            synthGrid.appendChild(card);
-        });
+    // Build UI
+    planetsData.forEach((p, i) => {
+        const isSaturn = p.class === "saturn";
+        const sec = document.createElement('div');
+        sec.className = 'section';
+        sec.style.transform = `translate3d(0, 0, ${i * -zoomStep}px)`;
+        let planetHTML = `<div class="planet-container">${isSaturn ? '<div class="ring"></div>' : ''}<div class="planet ${p.class}" data-freq="${p.freq}"></div></div>`;
+        sec.innerHTML = `<div class="info"><h1>${p.name}</h1><p>${p.freq} Hz</p></div>${planetHTML}`;
+        stage.appendChild(sec);
 
-        const sections = document.querySelectorAll('.section');
-        const dashboard = document.getElementById('dashboard');
-        const hint = document.getElementById('hint');
+        const card = document.createElement('div');
+        card.className = 'mini-card';
+        card.innerHTML = `<div class="mini-planet-container">${isSaturn ? '<div class="mini-ring"></div>' : ''}<div class="mini-planet ${p.class}" data-freq="${p.freq}"></div></div><label>${p.name.split(' ').pop()}</label><span>${p.freq}Hz</span>`;
+        synthGrid.appendChild(card);
+    });
 
-        window.addEventListener('scroll', () => {
-            const scrollY = window.scrollY;
-            stage.style.transform = `translate3d(0, 0, ${scrollY}px)`;
+    const sections = document.querySelectorAll('.section');
+    const dashboard = document.getElementById('dashboard');
+    const hint = document.getElementById('hint');
 
-            sections.forEach((s, i) => {
-                const homePosition = i * zoomStep;
-                const distanceBehind = scrollY - homePosition; // how far passed me
-                const distanceAhead = homePosition - scrollY; // how far in front
-
-                // 3. Logic for fading In/Out
-                if (distanceAhead < 1500 && distanceBehind < 800) {
-                    // It's in the visible zone
-                    s.style.opacity = "1";
-                    s.style.transition = "opacity 0.8s ease-in"; // Fast fade in
-                    // Only activate clicks when close
-                    s.style.pointerEvents = (distanceAhead < 500 && distanceBehind < 300) ? "auto" : "none";
-                } else {
-                    // It's out of the visible zone
-                    s.style.opacity = "0";
-                    s.style.transition = "opacity 1.2s ease-out"; // Slower fade out
-                    s.style.pointerEvents = "none";
-                }
-            });
-
-            // Transition to Dashboard
-            const maxScroll = (planetsData.length - 1) * zoomStep;
-            if (scrollY > maxScroll + 1200) {
-                dashboard.style.opacity = "1";
-                dashboard.style.pointerEvents = "auto";
-                hint.style.opacity = "0";
+    window.addEventListener('scroll', () => {
+        const scrollY = window.scrollY;
+        stage.style.transform = `translate3d(0, 0, ${scrollY}px)`;
+        sections.forEach((s, i) => {
+            const home = i * zoomStep;
+            const behind = scrollY - home;
+            const ahead = home - scrollY;
+            if (ahead < 1500 && behind < 800) {
+                s.style.opacity = "1";
+                s.style.pointerEvents = (ahead < 500 && behind < 300) ? "auto" : "none";
             } else {
-                dashboard.style.opacity = "0";
-                dashboard.style.pointerEvents = "none";
-                hint.style.opacity = "1";
+                s.style.opacity = "0";
+                s.style.pointerEvents = "none";
             }
         });
-
-        // Audio Engine
-        let aCtx;
-        function play(f) {
-            if (!aCtx) aCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (aCtx.state === 'suspended') aCtx.resume();
-            const o = aCtx.createOscillator();
-            const g = aCtx.createGain();
-            o.type = 'sine';
-            o.frequency.setValueAtTime(f, aCtx.currentTime);
-            g.gain.setValueAtTime(0, aCtx.currentTime);
-            g.gain.linearRampToValueAtTime(0.2, aCtx.currentTime + 0.1);
-            g.gain.exponentialRampToValueAtTime(0.0001, aCtx.currentTime + toneDuration);
-            o.connect(g); g.connect(aCtx.destination);
-            o.start(); o.stop(aCtx.currentTime + toneDuration);
+        const maxScroll = (planetsData.length - 1) * zoomStep;
+        if (scrollY > maxScroll + 1200) {
+            dashboard.style.opacity = "1";
+            dashboard.style.pointerEvents = "auto";
+            hint.style.opacity = "0";
+        } else {
+            dashboard.style.opacity = "0";
+            dashboard.style.pointerEvents = "none";
+            hint.style.opacity = "1";
         }
+    });
 
-        document.querySelectorAll('[data-freq]').forEach(p => {
-            p.addEventListener('pointerdown', () => {
-                play(parseFloat(p.dataset.freq));
-                // Add click flash effect
-                p.style.filter = "brightness(2)";
-                setTimeout(() => p.style.filter = "brightness(1)", 150);
-            });
+    // Audio Context
+    let aCtx;
+    function initAudio() {
+        if (!aCtx) aCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (aCtx.state === 'suspended') aCtx.resume();
+    }
+
+    // Planet Tone
+    function play(f) {
+        initAudio();
+        const o = aCtx.createOscillator();
+        const g = aCtx.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(f, aCtx.currentTime);
+        g.gain.setValueAtTime(0, aCtx.currentTime);
+        g.gain.linearRampToValueAtTime(0.2, aCtx.currentTime + 0.1);
+        g.gain.exponentialRampToValueAtTime(0.0001, aCtx.currentTime + toneDuration);
+        o.connect(g); g.connect(aCtx.destination);
+        o.start(); o.stop(aCtx.currentTime + toneDuration);
+    }
+
+    // Heartbeat Kick
+    function playKick() {
+        initAudio();
+        const o = aCtx.createOscillator();
+        const g = aCtx.createGain();
+        // Pitch drop creates the "kick" impact
+        o.frequency.setValueAtTime(150, aCtx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(0.01, aCtx.currentTime + 0.5);
+        g.gain.setValueAtTime(0.5, aCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.0001, aCtx.currentTime + 0.5);
+        o.connect(g); g.connect(aCtx.destination);
+        o.start(); o.stop(aCtx.currentTime + 0.5);
+    }
+
+    // Heartbeat Loop Logic
+    let hbEnabled = false;
+    let hbInterval;
+    const hbToggle = document.getElementById('hb-toggle');
+    const hbTempo = document.getElementById('hb-tempo');
+    const hbVal = document.getElementById('hb-val');
+
+    function updateHeartbeat() {
+        if (hbInterval) clearInterval(hbInterval);
+        if (hbEnabled) {
+            const ms = (1 / parseFloat(hbTempo.value)) * 1000;
+            hbInterval = setInterval(playKick, ms);
+        }
+    }
+
+    hbToggle.onclick = () => {
+        hbEnabled = !hbEnabled;
+        hbToggle.textContent = `PULSE: ${hbEnabled ? 'ON' : 'OFF'}`;
+        hbToggle.classList.toggle('active');
+        updateHeartbeat();
+    };
+
+    hbTempo.oninput = () => {
+        hbVal.textContent = `${hbTempo.value} Hz`;
+        if (hbEnabled) updateHeartbeat();
+    };
+
+    // UI Event Listeners
+    document.querySelectorAll('[data-freq]').forEach(p => {
+        p.addEventListener('pointerdown', () => {
+            play(parseFloat(p.dataset.freq));
+            p.style.filter = "brightness(2)";
+            setTimeout(() => p.style.filter = "brightness(1)", 150);
         });
+    });
 
-        // Toggle Logic
-        document.getElementById('btn-short').onclick = function() {
-            toneDuration = 1.0;
-            this.classList.add('active');
-            document.getElementById('btn-long').classList.remove('active');
-        };
-        document.getElementById('btn-long').onclick = function() {
-            toneDuration = 5.0;
-            this.classList.add('active');
-            document.getElementById('btn-short').classList.remove('active');
-        };
+    document.getElementById('btn-short').onclick = function() {
+        toneDuration = 1.0;
+        this.classList.add('active');
+        document.getElementById('btn-long').classList.remove('active');
+    };
+    document.getElementById('btn-long').onclick = function() {
+        toneDuration = 5.0;
+        this.classList.add('active');
+        document.getElementById('btn-short').classList.remove('active');
+    };
 
-        window.dispatchEvent(new Event('scroll'));
-    </script>
+    window.dispatchEvent(new Event('scroll'));
+</script>
+
 </body>
 </html>
