@@ -3,68 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Solar Synth | Nebula Voyage</title>
+    <title>Solar Synth | High Performance</title>
     <style>
         :root { --bg: #020205; --gold: #f0e68c; --crt-green: #33ff33; }
         
-        body, html { margin: 0; padding: 0; background: var(--bg); color: white; font-family: 'Courier New', monospace; width: 100%; }
+        body, html { margin: 0; padding: 0; background: var(--bg); color: white; font-family: 'Courier New', monospace; width: 100%; overscroll-behavior: none; }
 
-        /* Scroll Provider */
         .scroll-container { height: 35000px; width: 100%; }
 
-        /* Fixed Viewport */
-        .viewport { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; perspective: 1000px; perspective-origin: 50% 50%; overflow: hidden; z-index: 1; }
-        .star-field { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, #1b2735 0%, #050505 100%); z-index: -100; }
+        .viewport { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; perspective: 1000px; overflow: hidden; z-index: 1; }
         
-        #stage { width: 100%; height: 100%; transform-style: preserve-3d; will-change: transform; }
-
-        /* Planets */
-        .section { position: absolute; top: 0; left: 0; width: 100%; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; transform-style: preserve-3d; opacity: 0; pointer-events: none; transition: opacity 0.5s; z-index: 10; }
-        .planet-container { position: relative; display: flex; justify-content: center; align-items: center; width: 250px; height: 250px; transform-style: preserve-3d; }
-        .planet { width: 250px; height: 250px; border-radius: 50%; cursor: pointer; box-shadow: inset -30px -30px 50px #000; z-index: 10; -webkit-tap-highlight-color: transparent;}
-        .ring { position: absolute; width: 450px; height: 100px; border-radius: 50%; background: rgba(223, 209, 149, 0.4); border: 2px solid rgba(122, 110, 66, 0.8); transform: rotateX(75deg); z-index: 5; pointer-events: none; }
-        .info { text-align: center; margin-bottom: 20px; text-shadow: 0 0 10px #000; }
-
-        /* Environmental Clutter */
-        .env-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform-style: preserve-3d; pointer-events: none; transition: opacity 0.5s; }
-
-        /* Nebula Clouds */
-        .nebula {
-            position: absolute; border-radius: 50%;
-            filter: blur(80px);
-            opacity: 0.15;
-            mix-blend-mode: color-dodge;
+        /* Force GPU Acceleration */
+        #stage { 
+            width: 100%; height: 100%; 
+            transform-style: preserve-3d; 
+            will-change: transform;
+            backface-visibility: hidden;
         }
 
-        /* Earth Junk */
-        .junk-field { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform-style: preserve-3d; }
-        .junk { position: absolute; background: silver; width: 3px; height: 3px; }
+        .section { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100vh; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            transform-style: preserve-3d; opacity: 0; pointer-events: none; 
+            transition: opacity 0.4s ease; 
+        }
 
-        /* Dashboard */
-        #dashboard { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.92); z-index: 2000; opacity: 0; pointer-events: none; transition: opacity 0.8s; }
-        #oscilloscope { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.8; }
-        .controls { margin-bottom: 10px; display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.6); padding: 8px; border-radius: 5px; }
-        .toggle-btn { background: #111; border: 1px solid var(--gold); color: var(--gold); padding: 6px 12px; cursor: pointer; font-family: inherit; font-size: 10px; text-transform: uppercase; }
-        .toggle-btn.active { background: var(--gold); color: #000; box-shadow: 0 0 5px var(--gold); }
-        .planet-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; width: 95%; max-width: 800px; justify-items: center; }
-        .mini-card { display: flex; flex-direction: column; align-items: center; text-align: center; font-size: 8px; }
-        .mini-planet-container { position: relative; width: 40px; height: 40px; margin-bottom: 5px; display: flex; justify-content: center; align-items: center; }
-        .mini-planet { width: 40px; height: 40px; border-radius: 50%; cursor: pointer; box-shadow: inset -6px -6px 10px #000; z-index: 10; }
-        .mini-ring { position: absolute; width: 70px; height: 15px; background: rgba(223, 209, 149, 0.3); border-radius: 50%; transform: rotateX(75deg); z-index: 5; }
+        .planet-container { position: relative; display: flex; justify-content: center; align-items: center; width: 250px; height: 250px; transform-style: preserve-3d; }
+        .planet { width: 240px; height: 240px; border-radius: 50%; cursor: pointer; box-shadow: inset -30px -30px 50px #000; z-index: 10; }
+        .ring { position: absolute; width: 440px; height: 90px; border-radius: 50%; background: rgba(223, 209, 149, 0.2); border: 2px solid rgba(122, 110, 66, 0.5); transform: rotateX(75deg); z-index: 5; }
 
-        /* Planet Colors */
-        .sun { background: radial-gradient(circle at 30% 30%, #ffcc33, #ff6600); box-shadow: 0 0 50px #ff6600; }
-        .mercury { background: radial-gradient(circle at 30% 30%, #b5b5b5, #444); }
-        .venus { background: radial-gradient(circle at 30% 30%, #e8c381, #6b4a1a); }
+        /* Optimized Environments */
+        .nebula {
+            position: absolute; border-radius: 50%;
+            opacity: 0.1; mix-blend-mode: screen;
+            pointer-events: none;
+            will-change: transform;
+        }
+
+        /* Earth Junk - using a simpler dot pattern instead of many divs */
+        .junk-cloud {
+            position: absolute; width: 600px; height: 600px;
+            background-image: radial-gradient(circle, #fff 1px, transparent 1px);
+            background-size: 40px 40px;
+            opacity: 0; transition: opacity 1s;
+        }
+
+        #dashboard { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.9); z-index: 2000; opacity: 0; pointer-events: none; transition: opacity 0.5s; }
+        #oscilloscope { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.7; }
+        
+        .planet-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; width: 90%; max-width: 700px; }
+        .mini-card { display: flex; flex-direction: column; align-items: center; font-size: 8px; }
+        .mini-planet { width: 35px; height: 35px; border-radius: 50%; cursor: pointer; box-shadow: inset -4px -4px 8px #000; }
+
+        /* Styles for Planets */
+        .sun { background: radial-gradient(circle at 30% 30%, #ffcc33, #ff6600); box-shadow: 0 0 40px #ff6600; }
         .earth { background: radial-gradient(circle at 30% 30%, #3a7bd5, #06163a); }
-        .mars { background: radial-gradient(circle at 30% 30%, #ff4b2b, #4a0e05); }
-        .jupiter { background: radial-gradient(circle at 30% 30%, #d39c7e, #6e4a38); }
         .saturn { background: radial-gradient(circle at 30% 30%, #dfd195, #7a6e42); }
-        .uranus { background: radial-gradient(circle at 30% 30%, #b2e1e5, #4e8a8e); }
-        .neptune { background: radial-gradient(circle at 30% 30%, #4b70dd, #1a2a6c); }
-        .planetx { background: radial-gradient(circle at 30% 30%, #222, #000); box-shadow: 0 0 20px #444; }
+        .planetx { background: #111; box-shadow: 0 0 20px #333; }
+        /* ... other planets use simple colors for speed ... */
+        .mercury { background: #888; } .venus { background: #e8c381; } .mars { background: #ff4b2b; }
+        .jupiter { background: #d39c7e; } .uranus { background: #b2e1e5; } .neptune { background: #4b70dd; }
 
-        input[type=range] { cursor: pointer; accent-color: var(--crt-green); }
+        .toggle-btn { background: #111; border: 1px solid var(--gold); color: var(--gold); padding: 5px 10px; cursor: pointer; font-size: 10px; }
+        .toggle-btn.active { background: var(--gold); color: #000; }
     </style>
 </head>
 <body>
@@ -72,178 +73,142 @@
     <div class="scroll-container"></div>
 
     <div class="viewport">
-        <div class="star-field"></div>
         <div id="stage">
-            <div id="env-clouds" class="env-layer"></div>
-            <div id="env-junk" class="junk-field"></div>
+            <div id="env-layer"></div>
         </div>
     </div>
 
     <div id="dashboard">
         <canvas id="oscilloscope"></canvas>
-        <h3 style="color: var(--gold); letter-spacing: 5px; margin: 5px 0;">GALACTIC SYNTHESIZER</h3>
-        <div style="background: rgba(0,0,0,0.7); padding: 10px; border: 1px solid #333; border-radius: 10px; margin-bottom: 10px; width: 90%; max-width: 350px;">
-            <div style="display: flex; flex-direction: column; gap: 8px;">
-                <button class="toggle-btn" id="hb-toggle">PULSE: OFF</button>
-                <div style="display:flex; justify-content: space-between; font-size: 10px;"><span>TEMPO</span><span id="hb-val">1.0 Hz</span></div>
-                <input type="range" id="hb-tempo" min="0.5" max="4.0" step="0.1" value="1.0">
-                <div style="display:flex; justify-content: space-between; font-size: 10px;"><span>LINE</span><span>CIRCLE</span></div>
-                <input type="range" id="wave-morph" min="0" max="1" step="0.01" value="0">
-            </div>
-        </div>
-        <div class="controls">
-            <button class="toggle-btn active" id="btn-short">SHORT</button>
-            <button class="toggle-btn" id="btn-long">LONG</button>
+        <h3 style="color: var(--gold); margin: 5px 0;">GALACTIC SYNTH</h3>
+        <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin-bottom: 10px; width: 280px; text-align: center;">
+            <button class="toggle-btn" id="hb-toggle">PULSE: OFF</button>
+            <input type="range" id="hb-tempo" min="0.5" max="4.0" step="0.1" value="1.0" style="width:100%; margin-top:10px;">
+            <input type="range" id="wave-morph" min="0" max="1" step="0.1" value="0" style="width:100%;">
         </div>
         <div class="planet-grid" id="synth-grid"></div>
     </div>
 
     <script>
         const planetsData = [
-            { name: "THE SUN", freq: 126.22, class: "sun", env: { type: 'nebula', color: 'orange', offset: -1000} },
+            { name: "SUN", freq: 126.22, class: "sun", neb: "orange" },
             { name: "MERCURY", freq: 141.27, class: "mercury" },
             { name: "VENUS", freq: 221.23, class: "venus" },
-            { name: "EARTH", freq: 194.18, class: "earth", env: { type: 'junk', count: 15 } },
-            { name: "MARS", freq: 144.72, class: "mars", env: { type: 'nebula', color: 'red', offset: 1000 } },
+            { name: "EARTH", freq: 194.18, class: "earth", junk: true },
+            { name: "MARS", freq: 144.72, class: "mars", neb: "red" },
             { name: "JUPITER", freq: 183.58, class: "jupiter" },
             { name: "SATURN", freq: 147.85, class: "saturn" },
-            { name: "URANUS", freq: 207.36, class: "uranus", env: { type: 'nebula', color: 'cyan', offset: -1000 } },
+            { name: "URANUS", freq: 207.36, class: "uranus", neb: "cyan" },
             { name: "NEPTUNE", freq: 211.44, class: "neptune" },
             { name: "PLANET X", freq: 123.45, class: "planetx" }
         ];
 
         const stage = document.getElementById('stage');
+        const env = document.getElementById('env-layer');
         const synthGrid = document.getElementById('synth-grid');
-        const envClouds = document.getElementById('env-clouds');
-        const envJunk = document.getElementById('env-junk');
-        let toneDuration = 1.0;
-        let morphVal = 0;
+        let morphVal = 0, toneDuration = 1.0;
         const zoomStep = 3000;
 
-        // Setup DOM & Environments
         planetsData.forEach((p, i) => {
-            const isSaturn = p.class === "saturn";
             const home = i * zoomStep;
+            const isSaturn = p.class === "saturn";
 
-            // 1. Build Planet Section
+            // Planet Section
             const sec = document.createElement('div');
             sec.className = 'section';
-            sec.style.transform = `translate3d(0, 0, -${home}px)`; // Stage depth
-            sec.innerHTML = `<div class="info"><h1>${p.name}</h1><p>${p.freq} Hz</p></div><div class="planet-container">${isSaturn ? '<div class="ring"></div>' : ''}<div class="planet ${p.class}" data-freq="${p.freq}"></div></div>`;
+            sec.style.transform = `translate3d(0, 0, -${home}px)`;
+            sec.innerHTML = `<h1 style="margin:0">${p.name}</h1><div class="planet-container">${isSaturn ? '<div class="ring"></div>' : ''}<div class="planet ${p.class}" data-freq="${p.freq}"></div></div>`;
             stage.appendChild(sec);
 
-            // 2. Build Synth Cards
+            // Synth UI
             const card = document.createElement('div');
             card.className = 'mini-card';
-            card.innerHTML = `<div class="mini-planet-container">${isSaturn ? '<div class="mini-ring"></div>' : ''}<div class="mini-planet ${p.class}" data-freq="${p.freq}"></div></div><label>${p.name.split(' ').pop()}</label><span>${p.freq}Hz</span>`;
+            card.innerHTML = `<div class="mini-planet ${p.class}" data-freq="${p.freq}"></div><label>${p.name}</label>`;
             synthGrid.appendChild(card);
 
-            // 3. Populate Environments
-            if (p.env) {
-                if (p.env.type === 'nebula') {
-                    // Create a nebula cloud near the planet
-                    const cloud = document.createElement('div');
-                    cloud.className = 'nebula';
-                    cloud.style.background = p.env.color;
-                    cloud.style.width = '600px'; cloud.style.height = '600px';
-                    // Randomize position relative to planet home
-                    cloud.style.transform = `translate3d(${Math.random()*400-200}px, ${Math.random()*400-200}px, -${home + (p.env.offset || 0)}px)`;
-                    envClouds.appendChild(cloud);
-                }
-                if (p.env.type === 'junk') {
-                    // Spawn junk around Earth's exact home depth
-                    for(let j=0; j<p.env.count; j++) {
-                        const junk = document.createElement('div');
-                        junk.className = 'junk';
-                        // Scatter within viewport, centered on Earth's Z
-                        junk.style.transform = `translate3d(${Math.random()*400-200}px, ${Math.random()*400-200}px, -${home + Math.random()*200 - 100}px)`;
-                        envJunk.appendChild(junk);
-                    }
-                }
+            // Optimized Nebula
+            if (p.neb) {
+                const n = document.createElement('div');
+                n.className = 'nebula';
+                n.style.background = `radial-gradient(circle, ${p.neb}, transparent 70%)`;
+                n.style.width = '800px'; n.style.height = '800px';
+                n.style.transform = `translate3d(${Math.random()*200-100}px, ${Math.random()*200-100}px, -${home}px)`;
+                env.appendChild(n);
+            }
+
+            // Optimized Junk (Single Div with pattern)
+            if (p.junk) {
+                const j = document.createElement('div');
+                j.className = 'junk-cloud';
+                j.id = 'earth-junk';
+                j.style.transform = `translate3d(-300px, -300px, -${home}px)`;
+                env.appendChild(j);
             }
         });
 
-        const allEnvItems = document.querySelectorAll('.nebula, .junk');
-
-        // Audio Engine
+        // Audio & Osc
         let aCtx, analyser, dataArray;
         const canvas = document.getElementById('oscilloscope'), ctx = canvas.getContext('2d');
         function initAudio() {
-            if (aCtx) return; aCtx = new (window.AudioContext || window.webkitAudioContext)();
-            analyser = aCtx.createAnalyser(); analyser.fftSize = 1024;
-            dataArray = new Uint8Array(analyser.frequencyBinCount); analyser.connect(aCtx.destination);
-            drawOsc();
+            if (aCtx) return; aCtx = new AudioContext();
+            analyser = aCtx.createAnalyser(); analyser.fftSize = 512;
+            dataArray = new Uint8Array(analyser.frequencyBinCount);
+            analyser.connect(aCtx.destination);
+            loop();
         }
-        function drawOsc() {
-            requestAnimationFrame(drawOsc);
+        function loop() {
+            requestAnimationFrame(loop);
             canvas.width = window.innerWidth; canvas.height = window.innerHeight;
             analyser.getByteTimeDomainData(dataArray);
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.lineWidth = 3; ctx.strokeStyle = '#33ff33'; ctx.shadowBlur = 10; ctx.shadowColor = '#33ff33';
-            ctx.beginPath();
-            const cx = canvas.width / 2, cy = canvas.height / 2, r = Math.min(cx, cy) * 0.6;
-            for (let i = 0; i < dataArray.length; i++) {
-                let v = dataArray[i] / 128.0 - 1.0;
-                let lx = (i / dataArray.length) * canvas.width;
-                let ly = cy + v * (cy * 0.5);
-                let ang = (i / dataArray.length) * Math.PI * 2;
-                let crx = cx + Math.cos(ang) * (r + v * 60);
-                let cry = cy + Math.sin(ang) * (r + v * 60);
-                let x = lx * (1 - morphVal) + crx * morphVal;
-                let y = ly * (1 - morphVal) + cry * morphVal;
-                if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            ctx.strokeStyle = '#33ff33'; ctx.lineWidth = 3; ctx.beginPath();
+            const cx = canvas.width/2, cy = canvas.height/2;
+            for(let i=0; i<dataArray.length; i++) {
+                let v = dataArray[i]/128.0 - 1.0;
+                let lx = (i/dataArray.length)*canvas.width, ly = cy + v*100;
+                let ang = (i/dataArray.length)*Math.PI*2, r = 150 + v*50;
+                let x = lx*(1-morphVal) + (cx + Math.cos(ang)*r)*morphVal;
+                let y = ly*(1-morphVal) + (cy + Math.sin(ang)*r)*morphVal;
+                if(i==0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
             }
-            if(morphVal > 0.5) ctx.closePath(); ctx.stroke();
+            ctx.stroke();
         }
-        function play(f) { initAudio(); if (aCtx.state === 'suspended') aCtx.resume(); const o = aCtx.createOscillator(), g = aCtx.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(f, aCtx.currentTime); g.gain.setValueAtTime(0, aCtx.currentTime); g.gain.linearRampToValueAtTime(0.2, aCtx.currentTime + 0.1); g.gain.exponentialRampToValueAtTime(0.0001, aCtx.currentTime + toneDuration); o.connect(g); g.connect(analyser); o.start(); o.stop(aCtx.currentTime + toneDuration); }
-        function playKick() { initAudio(); const o = aCtx.createOscillator(), g = aCtx.createGain(); o.frequency.setValueAtTime(150, aCtx.currentTime); o.frequency.exponentialRampToValueAtTime(0.01, aCtx.currentTime + 0.5); g.gain.setValueAtTime(0.5, aCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, aCtx.currentTime + 0.5); o.connect(g); g.connect(analyser); o.start(); o.stop(aCtx.currentTime + 0.5); }
 
-        // Scroll Controller
-        const sections = document.querySelectorAll('.section'), dash = document.getElementById('dashboard'), hint = document.getElementById('hint');
+        // Scroll Performance
+        const sections = document.querySelectorAll('.section'), dash = document.getElementById('dashboard');
+        const junk = document.getElementById('earth-junk');
+
         window.onscroll = () => {
-            const y = window.pageYOffset || document.documentElement.scrollTop;
-            // Move the whole stage forward
+            const y = window.pageYOffset;
             stage.style.transform = `translate3d(0, 0, ${y}px)`;
 
-            // Planet Section Visibility (Fades)
             sections.forEach((s, i) => {
-                const home = i * zoomStep;
-                const dist = Math.abs(y - home);
-                if (dist < 1500) {
-                    s.style.opacity = "1";
-                    s.style.pointerEvents = dist < 500 ? "auto" : "none";
-                } else { s.style.opacity = "0"; s.style.pointerEvents = "none"; }
+                const dist = Math.abs(y - (i * zoomStep));
+                s.style.opacity = dist < 1200 ? "1" : "0";
+                s.style.pointerEvents = dist < 500 ? "auto" : "none";
             });
 
-            // Environmental Visibility (Optimization)
-            allEnvItems.forEach(item => {
-                // Get the specific depth assigned to this nebula/junk
-                const depthStr = item.style.transform;
-                const matches = depthStr.match(/translate3d\(.+?,\s*.+?,\s*-(.+?)px\)/);
-                if (matches) {
-                    const depth = parseFloat(matches[1]);
-                    // Only show items near the camera or slightly in front
-                    const distToCam = y - depth;
-                    // distToCam > 0 means passed camera, < -2500 is way in distance
-                    if (distToCam > -3000 && distToCam < 500) item.style.opacity = "1";
-                    else item.style.opacity = "0";
-                }
-            });
+            // Toggle junk visibility only when near Earth (index 3)
+            if (junk) junk.style.opacity = Math.abs(y - 9000) < 2000 ? "0.4" : "0";
 
-            // Dash Trigger
             const max = (planetsData.length - 1) * zoomStep;
-            if (y > max + 1000) { dash.style.opacity = "1"; dash.style.pointerEvents = "auto"; } else { dash.style.opacity = "0"; dash.style.pointerEvents = "none"; }
+            dash.style.opacity = y > max + 1000 ? "1" : "0";
+            dash.style.pointerEvents = y > max + 1000 ? "auto" : "none";
         };
 
-        // Heartbeat Logic
-        let hbEnabled = false, hbInt;
-        document.getElementById('hb-toggle').onclick = (e) => { hbEnabled = !hbEnabled; e.target.textContent = `PULSE: ${hbEnabled ? 'ON' : 'OFF'}`; e.target.classList.toggle('active'); if(hbInt) clearInterval(hbInt); if(hbEnabled) hbInt = setInterval(playKick, (1/parseFloat(document.getElementById('hb-tempo').value))*1000); };
-        document.getElementById('hb-tempo').oninput = (e) => { hbVal.textContent = `${e.target.value} Hz`; if(hbEnabled) { clearInterval(hbInt); hbInt = setInterval(playKick, (1/parseFloat(e.target.value))*1000); } };
-        document.getElementById('wave-morph').oninput = (e) => { morphVal = parseFloat(e.target.value); };
-        document.querySelectorAll('[data-freq]').forEach(p => p.addEventListener('pointerdown', () => play(parseFloat(p.dataset.freq))));
-        document.getElementById('btn-short').onclick = function() { toneDuration = 1.0; this.classList.add('active'); document.getElementById('btn-long').classList.remove('active'); };
-        document.getElementById('btn-long').onclick = function() { toneDuration = 5.0; this.classList.add('active'); document.getElementById('btn-short').classList.remove('active'); };
-        window.scrollTo(0, 1); window.scrollTo(0, 0); // Force check
+        // Inputs
+        document.getElementById('hb-toggle').onclick = (e) => e.target.classList.toggle('active');
+        document.getElementById('wave-morph').oninput = (e) => morphVal = e.target.value;
+        document.querySelectorAll('[data-freq]').forEach(p => p.onpointerdown = () => {
+            initAudio();
+            const o = aCtx.createOscillator(), g = aCtx.createGain();
+            o.frequency.value = p.dataset.freq;
+            g.gain.setTargetAtTime(0.2, aCtx.currentTime, 0.1);
+            g.gain.setTargetAtTime(0, aCtx.currentTime + 0.5, 0.1);
+            o.connect(g); g.connect(analyser);
+            o.start(); o.stop(aCtx.currentTime + 2);
+        });
+        window.scrollTo(0,0);
     </script>
 </body>
 </html>
