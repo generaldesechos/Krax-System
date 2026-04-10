@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Solar Frequencies | 9-Planet Synth</title>
+    <title>Solar Frequencies | Smooth Fades & Rings</title>
     <style>
-        :root { --bg: #020205; --gold: #f0e68c; --gap: 2500px; }
-        body, html { margin: 0; padding: 0; background: var(--bg); color: white; font-family: 'Courier New', monospace; }
+        :root { --bg: #020205; --gold: #f0e68c; --gap: 3000px; } /* Increased gap for smoother transitions */
+        body, html { margin: 0; padding: 0; background: var(--bg); color: white; font-family: 'Courier New', monospace; scroll-behavior: smooth; }
 
-        .scroll-track { height: 28000px; position: relative; } /* Enough height for 9 planets */
+        .scroll-track { height: 33000px; position: relative; } /* Enough height for 9 planets + buffer */
 
         .sticky-wrapper {
             position: sticky; top: 0; width: 100%; height: 100vh;
-            overflow: hidden; perspective: 1000px; perspective-origin: 50% 50%;
+            overflow: hidden; perspective: 1200px; perspective-origin: 50% 50%;
         }
 
         .star-field {
@@ -26,21 +26,42 @@
         .section {
             position: absolute; top: 0; left: 0; width: 100%; height: 100vh;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transform-style: preserve-3d; opacity: 0; pointer-events: none;
+            transform-style: preserve-3d; 
+            /* 1. Add Smooth Transitions for Fade In/Out */
+            transition: opacity 1s ease-out, transform 0.1s linear;
+            opacity: 0; pointer-events: none;
+        }
+
+        .planet-container {
+            position: relative; display: flex; justify-content: center; align-items: center;
+            width: 250px; height: 250px; transform-style: preserve-3d;
         }
 
         .planet {
             width: 250px; height: 250px; border-radius: 50%; cursor: pointer;
             box-shadow: inset -30px -30px 50px #000; -webkit-tap-highlight-color: transparent;
+            position: relative; z-index: 10;
         }
 
         .info { text-align: center; margin-bottom: 20px; transition: opacity 0.3s; }
+
+        /* 2. Saturn Ring Styles */
+        .ring {
+            position: absolute;
+            width: 450px; height: 100px; /* Flattened oval */
+            border-radius: 50%;
+            background: rgba(223, 209, 149, 0.5); /* Semi-transparent Saturn gold */
+            border: 2px solid rgba(122, 110, 66, 0.8);
+            transform: rotateX(75deg); /* Tilt it */
+            z-index: 5; /* Place behind planet sphere */
+            pointer-events: none; /* Can click through ring to planet */
+        }
 
         /* Synth Dashboard */
         #dashboard {
             position: absolute; top: 0; left: 0; width: 100%; height: 100vh;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            background: rgba(0,0,0,0.92); z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.8s;
+            background: rgba(0,0,0,0.92); z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 1s;
         }
 
         .controls { margin-bottom: 30px; display: flex; align-items: center; gap: 15px; }
@@ -51,12 +72,21 @@
         .toggle-btn.active { background: var(--gold); color: #000; }
 
         .planet-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
-            gap: 20px; width: 90%; max-width: 800px; justify-items: center;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 20px; width: 90%; max-width: 900px; justify-items: center;
         }
 
         .mini-card { display: flex; flex-direction: column; align-items: center; text-align: center; font-size: 10px; }
-        .mini-planet { width: 55px; height: 55px; border-radius: 50%; margin-bottom: 8px; cursor: pointer; box-shadow: inset -8px -8px 12px #000; }
+        .mini-planet-container {
+            position: relative; width: 55px; height: 55px; margin-bottom: 8px;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .mini-planet { width: 55px; height: 55px; border-radius: 50%; cursor: pointer; box-shadow: inset -8px -8px 12px #000; z-index: 10; }
+        .mini-ring {
+            position: absolute; width: 100px; height: 25px;
+            background: rgba(223, 209, 149, 0.4); border: 1px solid rgba(122, 110, 66, 0.6);
+            border-radius: 50%; transform: rotateX(75deg); z-index: 5;
+        }
         .mini-card label { color: var(--gold); margin-bottom: 2px; }
         .mini-card span { color: #888; font-size: 9px; }
 
@@ -84,11 +114,11 @@
             <div id="stage"></div>
 
             <div id="dashboard">
-                <h2 style="color: var(--gold); letter-spacing: 5px;">SOLAR SYNTHESIZER</h2>
+                <h2 style="color: var(--gold); letter-spacing: 5px; margin-bottom: 5px;">SOLAR SYNTHESIZER</h2>
                 <div class="controls">
                     <span>DURATION:</span>
-                    <button class="toggle-btn active" id="btn-short">SHORT (1s)</button>
-                    <button class="toggle-btn" id="btn-long">LONG (5s)</button>
+                    <button class="toggle-btn active" id="btn-short">SHORT</button>
+                    <button class="toggle-btn" id="btn-long">LONG</button>
                 </div>
                 <div class="planet-grid" id="synth-grid"></div>
             </div>
@@ -112,20 +142,37 @@
         const stage = document.getElementById('stage');
         const synthGrid = document.getElementById('synth-grid');
         let toneDuration = 1.0;
+        const zoomStep = 3000; // Define gap constant
 
         // Build 3D Sections and Synth Cards
         planetsData.forEach((p, i) => {
+            // Check if planet is saturn for ring addition
+            const isSaturn = p.class === "saturn";
+            
             // Add to 3D Stage
             const sec = document.createElement('div');
             sec.className = 'section';
-            sec.style.transform = `translate3d(0, 0, ${i * -2500}px)`;
-            sec.innerHTML = `<div class="info"><h1>${p.name}</h1><p>${p.freq} Hz</p></div><div class="planet ${p.class}" data-freq="${p.freq}"></div>`;
+            sec.style.transform = `translate3d(0, 0, ${i * -zoomStep}px)`;
+            
+            // Planet wrapper for rings
+            let planetHTML = `
+                <div class="planet-container">
+                    ${isSaturn ? '<div class="ring"></div>' : ''}
+                    <div class="planet ${p.class}" data-freq="${p.freq}"></div>
+                </div>`;
+                
+            sec.innerHTML = `<div class="info"><h1>${p.name}</h1><p>${p.freq} Hz</p></div>${planetHTML}`;
             stage.appendChild(sec);
 
             // Add to Synth Grid
             const card = document.createElement('div');
             card.className = 'mini-card';
-            card.innerHTML = `<div class="mini-planet ${p.class}" data-freq="${p.freq}"></div><label>${p.name.split(' ').pop()}</label><span>${p.freq}Hz</span>`;
+            card.innerHTML = `
+                <div class="mini-planet-container">
+                    ${isSaturn ? '<div class="mini-ring"></div>' : ''}
+                    <div class="mini-planet ${p.class}" data-freq="${p.freq}"></div>
+                </div>
+                <label>${p.name.split(' ').pop()}</label><span>${p.freq}Hz</span>`;
             synthGrid.appendChild(card);
         });
 
@@ -138,13 +185,28 @@
             stage.style.transform = `translate3d(0, 0, ${scrollY}px)`;
 
             sections.forEach((s, i) => {
-                const zDist = Math.abs(scrollY - (i * 2500));
-                s.style.opacity = (zDist < 800) ? "1" : "0";
-                s.style.pointerEvents = (zDist < 400) ? "auto" : "none";
+                const homePosition = i * zoomStep;
+                const distanceBehind = scrollY - homePosition; // how far passed me
+                const distanceAhead = homePosition - scrollY; // how far in front
+
+                // 3. Logic for fading In/Out
+                if (distanceAhead < 1500 && distanceBehind < 800) {
+                    // It's in the visible zone
+                    s.style.opacity = "1";
+                    s.style.transition = "opacity 0.8s ease-in"; // Fast fade in
+                    // Only activate clicks when close
+                    s.style.pointerEvents = (distanceAhead < 500 && distanceBehind < 300) ? "auto" : "none";
+                } else {
+                    // It's out of the visible zone
+                    s.style.opacity = "0";
+                    s.style.transition = "opacity 1.2s ease-out"; // Slower fade out
+                    s.style.pointerEvents = "none";
+                }
             });
 
-            const maxScroll = (planetsData.length - 1) * 2500;
-            if (scrollY > maxScroll + 1000) {
+            // Transition to Dashboard
+            const maxScroll = (planetsData.length - 1) * zoomStep;
+            if (scrollY > maxScroll + 1200) {
                 dashboard.style.opacity = "1";
                 dashboard.style.pointerEvents = "auto";
                 hint.style.opacity = "0";
@@ -174,7 +236,8 @@
         document.querySelectorAll('[data-freq]').forEach(p => {
             p.addEventListener('pointerdown', () => {
                 play(parseFloat(p.dataset.freq));
-                p.style.filter = "brightness(1.5)";
+                // Add click flash effect
+                p.style.filter = "brightness(2)";
                 setTimeout(() => p.style.filter = "brightness(1)", 150);
             });
         });
